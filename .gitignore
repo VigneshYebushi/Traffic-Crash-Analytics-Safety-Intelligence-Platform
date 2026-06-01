@@ -1,0 +1,4 @@
+Data/
+Database/
+__pycache__/
+*.pyc
