@@ -3,8 +3,8 @@ import pandas as pd
 
 conn = sqlite3.connect("Database/traffic_crashes.db")
 
-# Query 1 - Row Count
-query1 = """
+# Query - Row Count
+query = """
 SELECT COUNT(*) AS total_rows
 FROM CrashTable;
 """
@@ -15,8 +15,8 @@ print("Total Rows")
 print(result1)
 print("-" * 50)
 
-# Query 2 - Schema Information
-query2 = """
+# Query - Schema Information
+query = """
 PRAGMA table_info(CrashTable);
 """
 
