@@ -9,34 +9,34 @@ SELECT COUNT(*) AS total_rows
 FROM CrashTable;
 """
 
-result1 = pd.read_sql(query1, conn)
-
-print("Total Rows")
-print(result1)
+result1 = pd.read_sql(query, conn) #stores total rows of table
+print(result1) 
 print("-" * 50)
 
 # Query - Schema Information
 query = """
-PRAGMA table_info(CrashTable);
-"""
+PRAGMA table_info(CrashTable); 
+"""                             #pragma commands the sqlite for particular action
 
-result2 = pd.read_sql(query2, conn)
+result2 = pd.read_sql(query, conn)
 
 print("Table Schema")
 print(result2)
 
-#Query1
+#Query1-Find the top 5 most dangerous combinations of weather and crash type based on total crashes.  
+
 query1 = """
 SELECT
     WEATHER_CONDITION,
-    CRASH_TYPE,
+    FIRST_CRASH_TYPE,
     COUNT(*) AS total_crashes
 FROM CrashTable
 GROUP BY WEATHER_CONDITION, FIRST_CRASH_TYPE
 ORDER BY total_crashes DESC
 LIMIT 5;
 """
-
+                                                #order by arranges the values in high to low with DESC
+                                                #group by combines/merge same values into one
 result1 = pd.read_sql(query1, conn)
 
 print("Query 1")
@@ -46,7 +46,7 @@ result1.to_csv(
     index=False
 )
 
-#query2 
+#query2-Identify the top 10 streets with the highest number of injury crashes.
 query2 = """
 SELECT
     STREET_NAME,
@@ -61,13 +61,13 @@ LIMIT 10;
 result2 = pd.read_sql(query2, conn)
 
 print("\nQuery 2")
-print(result2.to_string(index=False))
+print(result2)
 result2.to_csv(
     "Results/query2_injury_streets.csv",
     index=False
 )
 
-#query3
+#query3- Find the percentage of crashes that resulted in injuries for each crash type. 
 query3 = """
 SELECT
     FIRST_CRASH_TYPE,
@@ -83,64 +83,53 @@ FROM CrashTable
 GROUP BY FIRST_CRASH_TYPE
 ORDER BY injury_percentage DESC;
 """
-
+#converts each crash to 1 results no.of crashes caused injuries 
 result3 = pd.read_sql(query3, conn)
 
 print("\nQuery 3")
-print(result3.to_string(index=False))
+print(result3)
 result3.to_csv(
     "Results/query3_injury_percentage.csv",
     index=False
 )
 
 
-#query4
+#query4-Determine the peak crash hour for each month. 
 query4 = """
-WITH MonthlyHourCrashes AS (
-    SELECT
-        CRASH_MONTH,
-        CRASH_HOUR,
-        COUNT(*) AS total_crashes
+SELECT CRASH_MONTH, CRASH_HOUR, total_crashes 
+FROM (
+    SELECT CRASH_MONTH,
+           CRASH_HOUR,
+           COUNT(*) AS total_crashes,
+           ROW_NUMBER() OVER(
+               PARTITION BY CRASH_MONTH
+               ORDER BY COUNT(*) DESC
+           ) AS rn
     FROM CrashTable
     GROUP BY CRASH_MONTH, CRASH_HOUR
-),
-RankedHours AS (
-    SELECT
-        CRASH_MONTH,
-        CRASH_HOUR,
-        total_crashes,
-        ROW_NUMBER() OVER (
-            PARTITION BY CRASH_MONTH
-            ORDER BY total_crashes DESC
-        ) AS rn
-    FROM MonthlyHourCrashes
 )
-SELECT
-    CRASH_MONTH,
-    CRASH_HOUR,
-    total_crashes
-FROM RankedHours
 WHERE rn = 1
 ORDER BY CRASH_MONTH;
 """
-
+#inner query uses ROW_NUMBER() with PARTITION BY CRASH_MONTH to rank the hours within each month based on crash count, from highest to lowest
+#then all the top hours in each month are picked n displayed in outer query
 result4 = pd.read_sql(query4, conn)
 
 print("\nQuery 4")
-print(result4.to_string(index=False))
+print(result4)
 result4.to_csv(
     "Results/query4_peak_crash_hour.csv",
     index=False
 )
 
-#query5
+#query5-Find the top 5 primary causes of crashes during night time(CRASH_HOUR ≥ 18).  
 query5 = """
 SELECT
-    PRIM_CONTRIBUTORY_CAUSE,
+    PRIM_CONTRIBUTORY_CAUSE AS primary_crash_cause,
     COUNT(*) AS total_crashes
 FROM CrashTable
 WHERE CRASH_HOUR >= 18
-GROUP BY PRIM_CONTRIBUTORY_CAUSE
+GROUP BY primary_crash_cause
 ORDER BY total_crashes DESC
 LIMIT 5;
 """
@@ -148,13 +137,13 @@ LIMIT 5;
 result5 = pd.read_sql(query5, conn)
 
 print("\nQuery 5")
-print(result5.to_string(index=False))
+print(result5)
 result5.to_csv(
     "Results/query5_night_causes.csv",
     index=False
 )
 
-#query6
+#query6-Compare average number of injuries in daylight vs darkness conditions. 
 query6 = """
 SELECT
     CASE
@@ -179,7 +168,7 @@ ORDER BY avg_injuries DESC;
 result6 = pd.read_sql(query6, conn)
 
 print("\nQuery 6")
-print(result6.to_string(index=False))
+print(result6)
 result6.to_csv(
     "Results/query6_daylight_darkness.csv",
     index=False
@@ -199,7 +188,7 @@ LIMIT 1;
 result7 = pd.read_sql(query7, conn)
 
 print("\nQuery 7")
-print(result7.to_string(index=False))
+print(result7)
 result7.to_csv(
     "Results/query7_traffic_control_device.csv",
     index=False
@@ -223,7 +212,7 @@ LIMIT 5;
 result8 = pd.read_sql(query8, conn)
 
 print("\nQuery 8")
-print(result8.to_string(index=False))
+print(result8)
 result8.to_csv(
     "Results/query8_hot_locations.csv",
     index=False
@@ -269,7 +258,7 @@ LIMIT 5;
 result9 = pd.read_sql(query9, conn)
 
 print("\nQuery 9")
-print(result9.to_string(index=False))
+print(result9)
 result9.to_csv(
     "Results/query9_injury_rate_streets.csv",
     index=False
@@ -307,7 +296,7 @@ ORDER BY year;
 result10 = pd.read_sql(query10, conn)
 
 print("\nQuery 10")
-print(result10.to_string(index=False))
+print(result10)
 result10.to_csv(
     "Results/query10_common_crash_type.csv",
     index=False
@@ -335,7 +324,7 @@ LIMIT 1;
 result11 = pd.read_sql(query11, conn)
 
 print("\nQuery 11")
-print(result11.to_string(index=False))
+print(result11)
 result11.to_csv(
     "Results/query11_day_of_week.csv",
     index=False
@@ -368,7 +357,7 @@ ORDER BY total_injuries DESC;
 result12 = pd.read_sql(query12, conn)
 
 print("\nQuery 12")
-print(result12.to_string(index=False))
+print(result12)
 result12.to_csv(
     "Results/query12_time_bucket.csv",
     index=False
@@ -417,7 +406,7 @@ ORDER BY
 result13 = pd.read_sql(query13, conn)
 
 print("\nQuery 13")
-print(result13.to_string(index=False))
+print(result13)
 result13.to_csv(
     "Results/query13_contributing_causes.csv",
     index=False
@@ -468,7 +457,7 @@ ORDER BY year;
 result14 = pd.read_sql(query14, conn)
 
 print("\nQuery 14")
-print(result14.to_string(index=False))
+print(result14)
 result14.to_csv(
     "Results/query14_growth_rate.csv",
     index=False
@@ -499,9 +488,10 @@ LIMIT 10;
 result15 = pd.read_sql(query15, conn)
 
 print("\nQuery 15")
-print(result15.to_string(index=False))
+print(result15)
 result15.to_csv(
     "Results/query15_hotspot_zones.csv",
     index=False
 )
 conn.close()
+
