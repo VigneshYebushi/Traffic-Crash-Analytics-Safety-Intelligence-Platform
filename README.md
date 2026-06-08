@@ -146,6 +146,16 @@ You can now explore crash analysis results, business insights, and dashboard vis
 
 ---
 
+## Future Improvements / Roadmap
+
+* Integrate interactive charts and visualizations for better trend analysis.
+* Add dynamic filters for year, weather condition, street, and crash type.
+* Implement geospatial mapping to visualize crash hotspots on an interactive map.
+* Migrate from SQLite to PostgreSQL for handling larger datasets and multi-user access.
+* Develop predictive analytics models to forecast high-risk crash zones and time periods.
+* Deploy the Streamlit dashboard to a cloud platform for public access and real-time monitoring.
+
+---
 ## Author
 
 Vignesh Yebushi
