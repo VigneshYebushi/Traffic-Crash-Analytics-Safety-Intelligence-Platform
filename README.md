@@ -119,4 +119,4 @@ The Streamlit dashboard is the primary interface for exploring project insights 
 
 ## Author
 
-Traffic Crash Analytics & Safety Intelligence Platform Project
+Vignesh Yebushi
