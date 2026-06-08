@@ -75,7 +75,7 @@ TRAFFIC_CRASH_PROJECT
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/Traffic_Crash_Project.git
+git clone [https://github.com/<your-username>/Traffic_Crash_Project.git](https://github.com/VigneshYebushi/Traffic-Crash-Analytics-Safety-Intelligence-Platform.git)
 ```
 
 ### Step 2: Navigate to the Project Directory
