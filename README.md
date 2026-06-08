@@ -24,27 +24,40 @@ TRAFFIC_CRASH_PROJECT
 
 * Data/
 
-  * Traffic_CrashesData.csv
+  * Traffic_CrashesData.csv (Source Dataset)
 
 * Database/
 
-  * traffic_crashes.db
+  * traffic_crashes.db (SQLite Database)
 
 * Results/
 
-  * Query result CSV files
+  * Query Result CSV Files
 
 * load_data.py
 
+  * Loads CSV data into SQLite
+
 * analysis_queries.py
+
+  * Executes and validates SQL queries
 
 * streamlit_app.py
 
-* README.md
+  * Main application for dashboard visualization
 
 * Traffic_Crash_Analytics.pptx
 
+  * Project Presentation
+
 * Traffic_Crash_Analytics.pdf
+
+  * Project Presentation (PDF Version)
+
+* README.md
+
+  * Project Documentation
+
 ---
 
 ## Features
@@ -59,23 +72,28 @@ TRAFFIC_CRASH_PROJECT
 
 ## How to Run
 
-### 1. Load Data
+### Step 1: Load Data into SQLite
 
 ```bash
 python load_data.py
 ```
 
-### 2. Execute SQL Queries
+### Step 2: (Optional) Execute SQL Queries
 
 ```bash
 python analysis_queries.py
 ```
 
-### 3. Run Streamlit Dashboard
+This script was used for query testing and result generation.
+
+### Step 3: Run the Dashboard
 
 ```bash
 streamlit run streamlit_app.py
 ```
+
+The Streamlit dashboard is the primary interface for exploring project insights and query results.
+
 
 ---
 
