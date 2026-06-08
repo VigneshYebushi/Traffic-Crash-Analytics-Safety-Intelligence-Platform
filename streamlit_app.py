@@ -82,12 +82,12 @@ if page == "Project Overview":
 
     col2.metric(
         "Years Covered",
-        total_years
+        int(total_years)
     )
 
     col3.metric(
         "Crash Types",
-        total_types
+        int(total_types)
     )
 
 # -------------------------
@@ -141,37 +141,26 @@ elif page == "Query Results":
         """,
 
         "Query 4": """
-        WITH MonthlyHourCrashes AS (
-            SELECT
+        SELECT CRASH_MONTH, CRASH_HOUR, total_crashes 
+        FROM (
+            SELECT 
                 CRASH_MONTH,
                 CRASH_HOUR,
-                COUNT(*) AS total_crashes
+                COUNT(*) AS total_crashes,
+                ROW_NUMBER() OVER(
+                    PARTITION BY CRASH_MONTH
+                    ORDER BY COUNT(*) DESC
+                ) AS rn
             FROM CrashTable
             GROUP BY CRASH_MONTH, CRASH_HOUR
-        ),
-        RankedHours AS (
-            SELECT
-                CRASH_MONTH,
-                CRASH_HOUR,
-                total_crashes,
-                ROW_NUMBER() OVER (
-                    PARTITION BY CRASH_MONTH
-                    ORDER BY total_crashes DESC
-                ) AS rn
-            FROM MonthlyHourCrashes
         )
-        SELECT
-            CRASH_MONTH,
-            CRASH_HOUR,
-            total_crashes
-        FROM RankedHours
         WHERE rn = 1
         ORDER BY CRASH_MONTH;
         """,
 
         "Query 5": """
         SELECT
-            PRIM_CONTRIBUTORY_CAUSE,
+            PRIM_CONTRIBUTORY_CAUSE AS primary_crash_cause,
             COUNT(*) AS total_crashes
         FROM CrashTable
         WHERE CRASH_HOUR >= 18
@@ -190,7 +179,7 @@ elif page == "Query Results":
                 )
                     THEN 'DARKNESS'
                 ELSE 'OTHER'
-            END AS light_group,
+            END AS LIGHT_GROUP,
             ROUND(AVG(INJURIES_TOTAL), 2) AS avg_injuries
         FROM CrashTable
         GROUP BY light_group
@@ -204,7 +193,7 @@ elif page == "Query Results":
         FROM CrashTable
         GROUP BY TRAFFIC_CONTROL_DEVICE
         ORDER BY avg_injuries DESC
-        LIMIT 5;
+        LIMIT 1;
         """,
 
         "Query 8": """
@@ -214,7 +203,7 @@ elif page == "Query Results":
             COUNT(*) AS total_crashes
         FROM CrashTable
         WHERE LATITUDE IS NOT NULL
-        AND LONGITUDE IS NOT NULL
+                AND LONGITUDE IS NOT NULL
         GROUP BY LATITUDE, LONGITUDE
         ORDER BY total_crashes DESC
         LIMIT 5;
@@ -227,7 +216,8 @@ elif page == "Query Results":
             SUM(CASE
                     WHEN INJURIES_TOTAL > 0 THEN 1
                     ELSE 0
-                END)AS injury_crashes,
+                END
+            )AS injury_crashes,
             ROUND(
                 100.0 *
                 SUM(CASE
@@ -246,148 +236,149 @@ elif page == "Query Results":
 
         "Query 10": """
         WITH CrashCounts AS (
+            SELECT
+                year,
+                FIRST_CRASH_TYPE,
+                COUNT(*) AS total_crashes
+            FROM CrashTable
+            GROUP BY year, FIRST_CRASH_TYPE
+        ),
+        RankedCrashTypes AS (
+            SELECT
+                year,
+                FIRST_CRASH_TYPE,
+                total_crashes,
+                ROW_NUMBER() OVER (
+                    PARTITION BY year
+                    ORDER BY total_crashes DESC
+                ) AS rn
+            FROM CrashCounts
+        )
         SELECT
             year,
             FIRST_CRASH_TYPE,
-            COUNT(*) AS total_crashes
-        FROM CrashTable
-        GROUP BY year, FIRST_CRASH_TYPE
-    ),
-    RankedCrashTypes AS (
-        SELECT
-            year,
-            FIRST_CRASH_TYPE,
-            total_crashes,
-            ROW_NUMBER() OVER (
-                PARTITION BY year
-                ORDER BY total_crashes DESC
-            ) AS rn
-        FROM CrashCounts
-    )
-    SELECT
-        year,
-        FIRST_CRASH_TYPE,
-        total_crashes
-    FROM RankedCrashTypes
-    WHERE rn = 1
-    ORDER BY year;
-    """,
+            total_crashes
+        FROM RankedCrashTypes
+        WHERE rn = 1
+        ORDER BY year;
+        """,
     
-    "Query 11": """
-WITH DayHourCounts AS (
-    SELECT
-        CRASH_DAY_OF_WEEK,
-        CRASH_HOUR,
-        COUNT(*) AS crash_count
-    FROM CrashTable
-    GROUP BY CRASH_DAY_OF_WEEK, CRASH_HOUR
-)
-SELECT
-    CRASH_DAY_OF_WEEK,
-    ROUND(AVG(crash_count), 2) AS avg_crashes_per_hour
-FROM DayHourCounts
-GROUP BY CRASH_DAY_OF_WEEK
-ORDER BY avg_crashes_per_hour DESC
-LIMIT 1;
-""",
+        "Query 11": """
+        WITH DayHourCounts AS (
+            SELECT
+                CRASH_DAY_OF_WEEK,
+                CRASH_HOUR,
+                COUNT(*) AS crash_count
+            FROM CrashTable
+            GROUP BY CRASH_DAY_OF_WEEK, CRASH_HOUR
+        )
+        SELECT
+            CRASH_DAY_OF_WEEK,
+            ROUND(AVG(crash_count), 2) AS avg_crashes_per_hour
+        FROM DayHourCounts
+        GROUP BY CRASH_DAY_OF_WEEK
+        ORDER BY avg_crashes_per_hour DESC
+        LIMIT 1;
+        """,
 
-"Query 12": """
-SELECT
-    CASE
-        WHEN CRASH_HOUR BETWEEN 6 AND 11
-            THEN 'Morning'
-        WHEN CRASH_HOUR BETWEEN 12 AND 17
-            THEN 'Afternoon'
-        WHEN CRASH_HOUR BETWEEN 18 AND 23
-            THEN 'Evening'
-        ELSE 'Night'
-    END AS time_bucket,
-    SUM(INJURIES_TOTAL) AS total_injuries
-FROM CrashTable
-GROUP BY time_bucket
-ORDER BY total_injuries DESC;
-""",
+        "Query 12": """
+        SELECT
+            CASE
+                WHEN CRASH_HOUR BETWEEN 6 AND 11
+                    THEN 'Morning'
+                WHEN CRASH_HOUR BETWEEN 12 AND 17
+                    THEN 'Afternoon'
+                WHEN CRASH_HOUR BETWEEN 18 AND 23
+                    THEN 'Evening'
+                ELSE 'Night'
+            END AS time_bucket,
+            SUM(INJURIES_TOTAL) AS total_injuries
+        FROM CrashTable
+        GROUP BY time_bucket
+        ORDER BY total_injuries DESC
+        LIMIT 1;
+        """,
 
-"Query 13": """
-WITH CauseCounts AS (
-    SELECT
-        FIRST_CRASH_TYPE,
-        PRIM_CONTRIBUTORY_CAUSE,
-        COUNT(*) AS total_crashes
-    FROM CrashTable
-    GROUP BY
-        FIRST_CRASH_TYPE,
-        PRIM_CONTRIBUTORY_CAUSE
-),
-RankedCauses AS (
-    SELECT
-        FIRST_CRASH_TYPE,
-        PRIM_CONTRIBUTORY_CAUSE,
-        total_crashes,
-        ROW_NUMBER() OVER (
-            PARTITION BY FIRST_CRASH_TYPE
-            ORDER BY total_crashes DESC
-        ) AS rn
-    FROM CauseCounts
-)
-SELECT
-    FIRST_CRASH_TYPE,
-    PRIM_CONTRIBUTORY_CAUSE,
-    total_crashes
-FROM RankedCauses
-WHERE rn <= 3
-ORDER BY
-    FIRST_CRASH_TYPE,
-    rn;
-""",
+        "Query 13": """
+        WITH CauseCounts AS (
+            SELECT
+                FIRST_CRASH_TYPE,
+                PRIM_CONTRIBUTORY_CAUSE,
+                COUNT(*) AS total_crashes
+        FROM CrashTable
+        GROUP BY
+            FIRST_CRASH_TYPE,
+            PRIM_CONTRIBUTORY_CAUSE
+        ),
+        RankedCauses AS (
+            SELECT
+                FIRST_CRASH_TYPE,
+                PRIM_CONTRIBUTORY_CAUSE,
+                total_crashes,
+                ROW_NUMBER() OVER (
+                    PARTITION BY FIRST_CRASH_TYPE
+                    ORDER BY total_crashes DESC
+                ) AS rn
+            FROM CauseCounts
+        )
+        SELECT
+            FIRST_CRASH_TYPE,
+            PRIM_CONTRIBUTORY_CAUSE,
+            total_crashes
+        FROM RankedCauses
+        WHERE rn <= 3
+        ORDER BY
+            FIRST_CRASH_TYPE,
+            rn;
+        """,
 
-"Query 14": """
-WITH YearlyCrashes AS (
-    SELECT
-        year,
-        COUNT(*) AS total_crashes
-    FROM CrashTable
-    GROUP BY year
-)
-SELECT
-    year,
-    total_crashes,
-    LAG(total_crashes)
-    OVER (
-        ORDER BY year
-    ) AS previous_year_crashes,
-    ROUND(
-        (
-            total_crashes -
+        "Query 14": """
+        WITH YearlyCrashes AS (
+            SELECT
+                year,
+                COUNT(*) AS total_crashes
+            FROM CrashTable
+            GROUP BY year
+        )
+        SELECT
+            year,
+            total_crashes,
             LAG(total_crashes)
             OVER (
                 ORDER BY year
-            )
-        ) * 100.0 /
-        LAG(total_crashes)
-        OVER (
-            ORDER BY year
-        ),
-        2
-    ) AS growth_rate_percent
-FROM YearlyCrashes
-ORDER BY year;
-""",
+            ) AS previous_year_crashes,
+        ROUND(
+            (
+                total_crashes -
+                LAG(total_crashes)
+                OVER (
+                    ORDER BY year
+                )
+            ) * 100.0 /
+            LAG(total_crashes)
+            OVER (
+                ORDER BY year
+            ),
+            2
+        ) AS growth_rate_percent
+    FROM YearlyCrashes
+    ORDER BY year;
+    """,
 
-"Query 15": """
-SELECT
-    ROUND(LATITUDE, 2) AS zone_latitude,
-    ROUND(LONGITUDE, 2) AS zone_longitude,
-    COUNT(*) AS total_crashes
-FROM CrashTable
-WHERE LATITUDE IS NOT NULL
-AND LONGITUDE IS NOT NULL
-GROUP BY
-    ROUND(LATITUDE, 2),
-    ROUND(LONGITUDE, 2)
-ORDER BY total_crashes DESC
-LIMIT 10;
-"""
+    "Query 15": """ 
+    SELECT
+        ROUND(LATITUDE, 2) AS zone_latitude,
+        ROUND(LONGITUDE, 2) AS zone_longitude,
+        COUNT(*) AS total_crashes
+    FROM CrashTable
+    WHERE LATITUDE IS NOT NULL
+        AND LONGITUDE IS NOT NULL   
+    GROUP BY
+        ROUND(LATITUDE, 2),
+        ROUND(LONGITUDE, 2)
+    ORDER BY total_crashes DESC
+    LIMIT 10;
+    """
         }
 
     selected_query = st.selectbox(

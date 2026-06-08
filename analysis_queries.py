@@ -98,7 +98,8 @@ result3.to_csv(
 query4 = """
 SELECT CRASH_MONTH, CRASH_HOUR, total_crashes 
 FROM (
-    SELECT CRASH_MONTH,
+    SELECT 
+           CRASH_MONTH,
            CRASH_HOUR,
            COUNT(*) AS total_crashes,
            ROW_NUMBER() OVER(
@@ -174,7 +175,7 @@ result6.to_csv(
     index=False
 )
 
-#query7
+#query7-Find which traffic control device type has the highest average injuries per crash. 
 query7 = """
 SELECT
     TRAFFIC_CONTROL_DEVICE,
@@ -194,8 +195,7 @@ result7.to_csv(
     index=False
 )
 
-
-#query8
+#query8-Identify the top 5 locations (latitude/longitude) with the highest crash frequency.  
 query8 = """
 SELECT
     LATITUDE,
@@ -203,7 +203,7 @@ SELECT
     COUNT(*) AS total_crashes
 FROM CrashTable
 WHERE LATITUDE IS NOT NULL
-  AND LONGITUDE IS NOT NULL
+        AND LONGITUDE IS NOT NULL
 GROUP BY LATITUDE, LONGITUDE
 ORDER BY total_crashes DESC
 LIMIT 5;
@@ -217,7 +217,7 @@ result8.to_csv(
     "Results/query8_hot_locations.csv",
     index=False
 )
-#query9
+#query9- Find the top 5 streets with the highest injury rate, considering only streets with more than 100 crashes.  
 query9 = """
 SELECT
     STREET_NAME,
@@ -254,7 +254,7 @@ ORDER BY injury_rate DESC
 
 LIMIT 5;
 """
-
+#Having is used after group by to filter the grouped data
 result9 = pd.read_sql(query9, conn)
 
 print("\nQuery 9")
@@ -263,7 +263,7 @@ result9.to_csv(
     "Results/query9_injury_rate_streets.csv",
     index=False
 )
-#query10
+#query10-For each year, identify the most common crash type.  
 query10 = """
 WITH CrashCounts AS (
     SELECT
@@ -292,7 +292,9 @@ FROM RankedCrashTypes
 WHERE rn = 1
 ORDER BY year;
 """
-
+#CTE-commmon table expression
+#1st CTE - finds total crashes of each year and type of crash
+#2nd CTE - assigns rank to the crash types in desc and takes 1st rank in each year
 result10 = pd.read_sql(query10, conn)
 
 print("\nQuery 10")
@@ -301,7 +303,7 @@ result10.to_csv(
     "Results/query10_common_crash_type.csv",
     index=False
 )
-#query11
+#query11 - Find the day of the week with the highest average crashes per hour.  
 query11 = """
 WITH DayHourCounts AS (
     SELECT
@@ -329,17 +331,17 @@ result11.to_csv(
     "Results/query11_day_of_week.csv",
     index=False
 )
-#query12
+#query12-Identify high-risk time slots: ● Group hours into buckets (Morning, Afternoon, Evening, Night) ● Find which bucket has the highest injury crashes
 query12 = """
 SELECT
     CASE
         WHEN CRASH_HOUR BETWEEN 6 AND 11
             THEN 'Morning'
 
-        WHEN CRASH_HOUR BETWEEN 12 AND 17
+        WHEN CRASH_HOUR BETWEEN 12 AND 16
             THEN 'Afternoon'
 
-        WHEN CRASH_HOUR BETWEEN 18 AND 23
+        WHEN CRASH_HOUR BETWEEN 17 AND 20
             THEN 'Evening'
 
         ELSE 'Night'
@@ -351,7 +353,8 @@ FROM CrashTable
 
 GROUP BY time_bucket
 
-ORDER BY total_injuries DESC;
+ORDER BY total_injuries DESC
+LIMIT 1;
 """
 
 result12 = pd.read_sql(query12, conn)
@@ -362,7 +365,8 @@ result12.to_csv(
     "Results/query12_time_bucket.csv",
     index=False
 )
-#query13
+
+#query13-Find the top 3 contributing causes for each crash type.  (Use window functions like ROW_NUMBER() or RANK()) 
 query13 = """
 WITH CauseCounts AS (
     SELECT
@@ -412,7 +416,7 @@ result13.to_csv(
     index=False
 )
 
-#query14
+#query14-Calculate the year-over-year growth rate of crashes.(Use LAG() window function) 
 query14 = """
 WITH YearlyCrashes AS (
     SELECT
@@ -453,7 +457,8 @@ FROM YearlyCrashes
 
 ORDER BY year;
 """
-
+#LAG - look at previous 
+#using LAG returns the difference of total crashes of present yr with previous yr which gives growth rate.
 result14 = pd.read_sql(query14, conn)
 
 print("\nQuery 14")
@@ -462,7 +467,9 @@ result14.to_csv(
     "Results/query14_growth_rate.csv",
     index=False
 )
-#query15
+#query15-Identify hotspot zones: 
+# ● Group nearby locations (round latitude & longitude to 2 decimal places)
+# ● Find top 10 zones with highest crashes 
 query15 = """
 SELECT
     ROUND(LATITUDE, 2) AS zone_latitude,
