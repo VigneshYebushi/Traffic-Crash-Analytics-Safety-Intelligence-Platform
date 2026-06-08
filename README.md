@@ -42,8 +42,9 @@ TRAFFIC_CRASH_PROJECT
 
 * README.md
 
-*Traffic_Crash_Analytics.pptx 
+* Traffic_Crash_Analytics.pptx
 
+* Traffic_Crash_Analytics.pdf
 ---
 
 ## Features
