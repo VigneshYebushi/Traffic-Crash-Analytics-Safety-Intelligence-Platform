@@ -70,29 +70,58 @@ TRAFFIC_CRASH_PROJECT
 
 ---
 
-## How to Run
+## Installation & Setup
 
-### Step 1: Load Data into SQLite
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/<your-username>/Traffic_Crash_Project.git
+```
+
+### Step 2: Navigate to the Project Directory
+
+```bash
+cd Traffic_Crash_Project
+```
+
+### Step 3: Install Required Dependencies
+
+```bash
+pip install pandas streamlit
+```
+
+### Step 4: Load the Dataset into SQLite
 
 ```bash
 python load_data.py
 ```
 
-### Step 2: (Optional) Execute SQL Queries
+This creates the SQLite database and loads the crash records into the `CrashTable`.
+
+### Step 5: (Optional) Execute SQL Queries
 
 ```bash
 python analysis_queries.py
 ```
 
-This script was used for query testing and result generation.
+This script executes all analytical SQL queries and generates query result files.
 
-### Step 3: Run the Dashboard
+### Step 6: Launch the Streamlit Dashboard
 
 ```bash
 streamlit run streamlit_app.py
 ```
 
-The Streamlit dashboard is the primary interface for exploring project insights and query results.
+### Step 7: Open the Dashboard
+
+After running the above command, open the local URL displayed in the terminal:
+
+```text
+http://localhost:8501
+```
+
+You can now explore crash analysis results, business insights, and dashboard visualizations interactively.
+
 
 
 ---
